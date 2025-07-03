@@ -1,0 +1,57 @@
+@model ProductApp.Models.User
+
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3>Register</h3>
+            </div>
+            <div class="card-body">
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger">@ViewBag.Error</div>
+                }
+                
+                <form method="post">
+                    <div class="mb-3">
+                        <label asp-for="UserName" class="form-label">Name</label>
+                        <input asp-for="UserName" class="form-control" required>
+                        <span asp-validation-for="UserName" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="UserEmail" class="form-label">Email</label>
+                        <input asp-for="UserEmail" type="email" class="form-control" required>
+                        <span asp-validation-for="UserEmail" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="UserPassword" class="form-label">Password</label>
+                        <input asp-for="UserPassword" type="password" class="form-control" required>
+                        <span asp-validation-for="UserPassword" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="UserNumber" class="form-label">Phone Number</label>
+                        <input asp-for="UserNumber" type="number" class="form-control" required>
+                        <span asp-validation-for="UserNumber" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="UserAddress" class="form-label">Address</label>
+                        <textarea asp-for="UserAddress" class="form-control" rows="3" required></textarea>
+                        <span asp-validation-for="UserAddress" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Register</button>
+                    <a href="@Url.Action("Login", "Account")" class="btn btn-link">Already have an account? Login</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

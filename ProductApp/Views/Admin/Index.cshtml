@@ -1,0 +1,38 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <h2>Admin Dashboard</h2>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card text-white bg-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">Products</h5>
+                        <p class="card-text">Total: @ViewBag.ProductCount</p>
+                        <a href="@Url.Action("Products")" class="btn btn-light">Manage Products</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title">Categories</h5>
+                        <p class="card-text">Total: @ViewBag.CategoryCount</p>
+                        <a href="@Url.Action("Categories")" class="btn btn-light">Manage Categories</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-info">
+                    <div class="card-body">
+                        <h5 class="card-title">Users</h5>
+                        <p class="card-text">Total: @ViewBag.UserCount</p>
+                        <a href="@Url.Action("Users")" class="btn btn-light">Manage Users</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
