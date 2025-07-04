@@ -1,41 +1,53 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
-using ProductApp.Data;
 using ProductApp.Models;
 using ProductApp.Repositories;
+using ProductApp.Identity;
+using ProductApp.Data;
 using System.Data;
+using MySql.Data.MySqlClient;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddScoped<IDbConnection>(sp =>
+    new MySqlConnection(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<IUserStore<ApplicationUser>, DapperUserStore>();
+builder.Services.AddScoped<IRoleStore<ApplicationRole>, DapperRoleStore>();
+builder.Services.AddScoped<ProductRepository>();
+builder.Services.AddScoped<CategoryRepository>();
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>(opts =>
+builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(opts =>
 {
     opts.SignIn.RequireConfirmedAccount = false;
     opts.Password.RequiredLength = 6;
+    opts.Password.RequireDigit = true;
+    opts.Password.RequireUppercase = true;
+    opts.Password.RequireNonAlphanumeric = true;
 })
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
-
-
-builder.Services.AddScoped<IDbConnection>(sp =>
-    new SqlConnection(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddScoped<ProductRepository>();
-builder.Services.AddScoped<CategoryRepository>();
+.AddDefaultTokenProviders();
 
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+// Seed the database
 using (var scope = app.Services.CreateScope())
 {
-    var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    ctx.Database.EnsureCreated();
-    await DatabaseSeeder.SeedAsync(scope.ServiceProvider);
+    try
+    {
+        await DatabaseSeeder.SeedAsync(scope.ServiceProvider);
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the database.");
+
+        if (app.Environment.IsDevelopment())
+        {
+            throw;
+        }
+    }
 }
 
 if (!app.Environment.IsDevelopment())
@@ -43,6 +55,7 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
