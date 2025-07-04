@@ -1,0 +1,33 @@
+﻿@model IEnumerable<ProductApp.Models.Product>
+@{
+    ViewData["Title"] = "Products";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th class="text-end">Price</th>
+            <th class="text-end">Stock</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td>@p.ProductName</td>
+                <td>@p.Category?.CategoryName</td>
+                <td class="text-end">@p.ProductPrice:C</td>
+                <td class="text-end">@p.ProductStock</td>
+                <td class="text-end">
+                    <a asp-action="Details" asp-route-id="@p.ProductId"
+                       class="btn btn-sm btn-link">Details</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

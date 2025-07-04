@@ -6,8 +6,8 @@ namespace ProductApp.Models
     {
         [ExplicitKey]
         public int TransactionId { get; set; }
-        public int UserId { get; set; }      
-        public User User { get; set; }
+        public string UserId { get; set; }
+        public ApplicationUser User { get; set; }
         public int TransactionAmount { get; set; }
         public int PaymentMode { get; set; }
         public DateTime TransactionDate { get; set; }

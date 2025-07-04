@@ -1,0 +1,22 @@
+﻿@model ProductApp.Models.Product
+@{
+    ViewData["Title"] = "Product Details";
+}
+
+<h2>@Model.ProductName</h2>
+
+<div class="mb-3"><strong>Category:</strong> @Model.Category?.CategoryName</div>
+<div class="mb-3"><strong>Price:</strong> @Model.ProductPrice:C</div>
+<div class="mb-3"><strong>Stock:</strong> @Model.ProductStock</div>
+<div class="mb-3">
+    <strong>Description:</strong>
+    <p>@Model.ProductDescription</p>
+</div>
+@if (!string.IsNullOrEmpty(Model.ProductImage))
+{
+    <div class="mb-3">
+        <img src="@Model.ProductImage" alt="@Model.ProductName"
+             class="img-fluid" />
+    </div>
+}
+<a asp-action="Index" class="btn btn-secondary">Back to Products</a>

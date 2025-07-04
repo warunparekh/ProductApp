@@ -1,95 +1,42 @@
-﻿using Dapper;
-using Dapper.Contrib.Extensions;
-using MySqlConnector;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using ProductApp.Data;
 using ProductApp.Models;
 
 namespace ProductApp.Repositories
 {
     public class CategoryRepository
     {
-        private readonly string _connectionString = "Server=localhost;Database=productapp;User=kirito;Password=admin;";
+        private readonly ApplicationDbContext _db;
+        public CategoryRepository(ApplicationDbContext db) => _db = db;
 
-        public IEnumerable<Category> GetAllCategories()
+        public Task<List<Category>> GetAllAsync()
+            => _db.Categories.ToListAsync();
+
+        public Task<Category> GetByIdAsync(int id)
+            => _db.Categories.FindAsync(id).AsTask();
+
+        public async Task AddAsync(Category c)
         {
-            using var connection = new MySqlConnection(_connectionString);
-            return connection.GetAll<Category>();
+            _db.Categories.Add(c);
+            await _db.SaveChangesAsync();
         }
 
-        public Category GetCategoryById(int id)
+        public async Task UpdateAsync(Category c)
         {
-            using var connection = new MySqlConnection(_connectionString);
-            return connection.Get<Category>(id);
+            _db.Categories.Update(c);
+            await _db.SaveChangesAsync();
         }
 
-        public long AddCategory(Category category)
+        public async Task DeleteAsync(int id)
         {
-            using var connection = new MySqlConnection(_connectionString);
-            try
+            var c = await _db.Categories.FindAsync(id);
+            if (c != null)
             {
-                category.CategoryId = 0; 
-                var sql = @"INSERT INTO category (CategoryName) 
-                           VALUES (@CategoryName);
-                           SELECT LAST_INSERT_ID();";
-
-                return connection.QuerySingle<long>(sql, category);
+                _db.Categories.Remove(c);
+                await _db.SaveChangesAsync();
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error in AddCategory: {ex.Message}");
-                throw;
-            }
-        }
-
-        public bool DeleteCategory(int id)
-        {
-            using var connection = new MySqlConnection(_connectionString);
-            try
-            {
-                var productCount = connection.QuerySingle<int>(
-                    "SELECT COUNT(*) FROM product WHERE CategoryId = @CategoryId",
-                    new { CategoryId = id });
-
-                if (productCount > 0)
-                {
-                    throw new InvalidOperationException("Cannot delete category that has products assigned to it.");
-                }
-
-                var sql = "DELETE FROM category WHERE CategoryId = @CategoryId";
-                var rowsAffected = connection.Execute(sql, new { CategoryId = id });
-                return rowsAffected > 0;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error in DeleteCategory: {ex.Message}");
-                throw;
-            }
-        }
-
-        public bool UpdateCategory(Category category)
-        {
-            using var connection = new MySqlConnection(_connectionString);
-            try
-            {
-                var sql = @"UPDATE category 
-                           SET CategoryName = @CategoryName 
-                           WHERE CategoryId = @CategoryId";
-
-                var rowsAffected = connection.Execute(sql, category);
-                return rowsAffected > 0;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error in UpdateCategory: {ex.Message}");
-                throw;
-            }
-        }
-
-        public int GetProductCountByCategory(int categoryId)
-        {
-            using var connection = new MySqlConnection(_connectionString);
-            return connection.QuerySingle<int>(
-                "SELECT COUNT(*) FROM product WHERE CategoryId = @CategoryId",
-                new { CategoryId = categoryId });
         }
     }
 }

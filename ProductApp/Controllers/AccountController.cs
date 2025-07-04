@@ -1,84 +1,81 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
 using ProductApp.Models;
-using ProductApp.Services;
-using ProductApp.Repositories;
+using ProductApp.ViewModels;
 
 namespace ProductApp.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly AuthService _authService;
-        private readonly UserRepository _userRepository;
+        private readonly UserManager<ApplicationUser> _um;
+        private readonly SignInManager<ApplicationUser> _sm;
 
-        public AccountController()
+        public AccountController(
+            UserManager<ApplicationUser> um,
+            SignInManager<ApplicationUser> sm)
         {
-            _userRepository = new UserRepository();
-            _authService = new AuthService(_userRepository);
+            _um = um;
+            _sm = sm;
         }
 
-        public IActionResult Login()
+        [HttpGet]
+        public IActionResult Register() => View();
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(RegisterViewModel m)
         {
+            if (!ModelState.IsValid) return View(m);
+
+            var user = new ApplicationUser
+            {
+                UserName = m.Email,
+                Email = m.Email,
+                PhoneNumber = m.PhoneNumber,
+                UserAddress = m.UserAddress,
+                IsAdmin = false
+            };
+
+            var r = await _um.CreateAsync(user, m.Password);
+            if (r.Succeeded)
+            {
+                await _um.AddToRoleAsync(user, "User");
+                await _sm.SignInAsync(user, isPersistent: false);
+                return RedirectToAction("Index", "Home");
+            }
+            foreach (var e in r.Errors)
+                ModelState.AddModelError("", e.Description);
+
+            return View(m);
+        }
+
+        [HttpGet]
+        public IActionResult Login(string returnUrl = null)
+        {
+            ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
-        [HttpPost]
-        public IActionResult Login(string email, string password)
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginViewModel m, string returnUrl = null)
         {
-            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+            if (!ModelState.IsValid) return View(m);
+
+            var r = await _sm.PasswordSignInAsync(m.Email, m.Password, m.RememberMe, false);
+            if (r.Succeeded)
             {
-                ViewBag.Error = "Email and password are required.";
-                return View();
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                    return Redirect(returnUrl);
+
+                return RedirectToAction("Index", "Home");
             }
-
-            var user = _authService.Login(email, password);
-            if (user != null)
-            {
-                
-                HttpContext.Session.SetInt32("UserId", user.UserId);
-                HttpContext.Session.SetString("UserName", user.UserName);
-                HttpContext.Session.SetString("UserEmail", user.UserEmail);
-                HttpContext.Session.SetString("IsAdmin", user.isAdmin.ToString());
-
-                if (user.isAdmin)
-                {
-                    return RedirectToAction("Index", "Admin");
-                }
-                else
-                {
-                    return RedirectToAction("Index", "Home");
-                }
-            }
-
-            ViewBag.Error = "Invalid email or password.";
-            return View();
+            ModelState.AddModelError("", "Invalid login.");
+            return View(m);
         }
 
-        public IActionResult Register()
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
         {
-            return View();
-        }
-
-        [HttpPost]
-        public IActionResult Register(User user)
-        {
-            if (ModelState.IsValid)
-            {
-                if (_authService.Register(user))
-                {
-                    TempData["Success"] = "Registration successful! Please login.";
-                    return RedirectToAction("Login");
-                }
-                else
-                {
-                    ViewBag.Error = "Email already exists.";
-                }
-            }
-            return View(user);
-        }
-
-        public IActionResult Logout()
-        {
-            HttpContext.Session.Clear();
+            await _sm.SignOutAsync();
             return RedirectToAction("Login");
         }
     }

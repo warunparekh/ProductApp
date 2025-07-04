@@ -1,54 +1,46 @@
-@model ProductApp.Models.User
-
+@model ProductApp.ViewModels.RegisterViewModel
 @{
     ViewData["Title"] = "Register";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h3>Register</h3>
-            </div>
-            <div class="card-body">
-                @if (ViewBag.Error != null)
-                {
-                    <div class="alert alert-danger">@ViewBag.Error</div>
-                }
-                
-                <form method="post">
-                    <div class="mb-3">
-                        <label asp-for="UserName" class="form-label">Name</label>
-                        <input asp-for="UserName" class="form-control" required>
-                        <span asp-validation-for="UserName" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="UserEmail" class="form-label">Email</label>
-                        <input asp-for="UserEmail" type="email" class="form-control" required>
-                        <span asp-validation-for="UserEmail" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="UserPassword" class="form-label">Password</label>
-                        <input asp-for="UserPassword" type="password" class="form-control" required>
-                        <span asp-validation-for="UserPassword" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="UserNumber" class="form-label">Phone Number</label>
-                        <input asp-for="UserNumber" type="number" class="form-control" required>
-                        <span asp-validation-for="UserNumber" class="text-danger"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="UserAddress" class="form-label">Address</label>
-                        <textarea asp-for="UserAddress" class="form-control" rows="3" required></textarea>
-                        <span asp-validation-for="UserAddress" class="text-danger"></span>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Register</button>
-                    <a href="@Url.Action("Login", "Account")" class="btn btn-link">Already have an account? Login</a>
-                </form>
-            </div>
-        </div>
+<h2>@ViewData["Title"]</h2>
+
+<form asp-action="Register" method="post" novalidate>
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
     </div>
-</div>
+
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label"></label>
+        <input asp-for="Password" class="form-control" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ConfirmPassword" class="form-label"></label>
+        <input asp-for="ConfirmPassword" class="form-control" />
+        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="PhoneNumber" class="form-label"></label>
+        <input asp-for="PhoneNumber" class="form-control" />
+        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="UserAddress" class="form-label"></label>
+        <input asp-for="UserAddress" class="form-control" />
+        <span asp-validation-for="UserAddress" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Register</button>
+    <a asp-action="Login" class="btn btn-link">Already have an account?</a>
+</form>
 
 @section Scripts {
     @{

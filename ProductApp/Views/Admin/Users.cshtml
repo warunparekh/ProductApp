@@ -1,107 +1,26 @@
-@model IEnumerable<ProductApp.Models.User>
-
+@model IEnumerable<ProductApp.ViewModels.UserViewModel>
 @{
     ViewData["Title"] = "Manage Users";
 }
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
-            <h2 class="mb-4">Manage Users</h2>
-            
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Address</th>
-                            <th>Admin Status</th>
-                            <th>Actions</th>                            
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var user in Model)
-                        {
-                            <tr>
-                                <td>@user.UserId</td>
-                                <td>@user.UserName</td>
-                                <td>@user.UserEmail</td>                                
-                                <td>@user.UserNumber</td>
-                                <td>@user.UserAddress</td>
-                                <td>
-                                    @if (user.isAdmin)
-                                    {
-                                        <span class="badge bg-success">Admin</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-secondary">User</span>
-                                    }
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-info" onclick="toggleAdmin(@user.UserId)">
-                                        @if (user.isAdmin)
-                                        {
-                                            <text>Remove Admin</text>
-                                        }
-                                        else
-                                        {
-                                            <text>Make Admin</text>
-                                        }
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" onclick="deleteUser(@user.UserId)">Delete</button>
-                                   
-                                </td>
-                                
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
+<h2>@ViewData["Title"]</h2>
 
-@section Scripts {
-    <script>
-        function toggleAdmin(userId) {
-            $.ajax({
-                url: '@Url.Action("ToggleAdminStatus")',
-                type: 'POST',
-                data: { id: userId },
-                success: function(result) {
-                    if (result.success) {
-                        location.reload();
-                    } else {
-                        alert('Error updating user status');
-                    }
-                }
-            });
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Address</th>
+            <th>Roles</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var u in Model)
+        {
+            <tr>
+                <td>@u.Email</td>
+                <td>@u.UserAddress</td>
+                <td>@string.Join(", ", u.Roles)</td>
+            </tr>
         }
-    </script>
-
-    <script>
-        function deleteUser(userId) {
-            if (confirm('Are you sure you want to delete this user?')) {
-                $.ajax({
-                    url: '@Url.Action("DeleteUser")',
-                    type: 'POST',
-                    data: { id: userId },
-                    success: function(result) {
-                        if (result.success) {
-                            location.reload();
-                        } else {
-                            alert('Error deleting user');
-                        }
-                    }
-                });
-            }
-            }
-        
-    </script>   
-    }
-
-        
+    </tbody>
+</table>

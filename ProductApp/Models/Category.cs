@@ -1,19 +1,16 @@
-﻿using Dapper.Contrib.Extensions;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace ProductApp.Models
 {
-    [Table("category")]
     public class Category
     {
-        [Dapper.Contrib.Extensions.Key] 
+        [Key]
         public int CategoryId { get; set; }
 
-        [Required(ErrorMessage = "Category name is required")]
-        [StringLength(100, ErrorMessage = "Category name cannot exceed 100 characters")]
+        [Required, StringLength(100)]
         public string CategoryName { get; set; }
-        
-        [Computed]
-        public int ProductCount { get; set; }
+
+        public ICollection<Product> Products { get; set; }
     }
 }
