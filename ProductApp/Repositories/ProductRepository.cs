@@ -16,10 +16,7 @@ namespace ProductApp.Repositories
                   .Include(p => p.Category)
                   .ToListAsync();
 
-        public Task<Product> GetByIdAsync(int id)
-            => _db.Products
-                  .Include(p => p.Category)
-                  .FirstOrDefaultAsync(p => p.ProductId == id);
+        public Task<Product> GetByIdAsync(int id) => _db.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.ProductId == id);
 
         public async Task AddAsync(Product p)
         {

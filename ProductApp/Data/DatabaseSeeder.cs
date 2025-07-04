@@ -11,12 +11,10 @@ namespace ProductApp.Data
             var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
             var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-            // 1) Create roles
             foreach (var role in new[] { "Admin", "User" })
                 if (!await roleManager.RoleExistsAsync(role))
                     await roleManager.CreateAsync(new IdentityRole(role));
 
-            // 2) Create default admin
             const string adminEmail = "admin@yourapp.com";
             if (await userManager.FindByEmailAsync(adminEmail) is null)
             {

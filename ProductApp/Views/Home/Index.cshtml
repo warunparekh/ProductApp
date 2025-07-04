@@ -1,64 +1,8 @@
-﻿@model IEnumerable<ProductApp.Models.Product>
-
 @{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="container">
-    <div class="row">
-        <div class="col-md-12">
-            <h1 class="display-4 text-center mb-4">Welcome to ProductApp</h1>
-
-            @if (Context.Session.GetInt32("UserId") == null)
-            {
-                <div class="alert alert-info text-center">
-                    <p>Please <a href="@Url.Action("Login", "Account")" class="btn btn-primary">Login</a> to access all features or <a href="@Url.Action("Register", "Account")" class="btn btn-outline-primary">Register</a> for a new account.</p>
-                </div>
-            }
-
-            <h2 class="mb-4">Featured Products</h2>
-
-            @if (Model != null && Model.Any())
-            {
-                <div class="row">
-                    @foreach (var product in Model)
-                    {
-                        <div class="col-md-4 mb-4">
-                            <div class="card">
-                                @if (!string.IsNullOrEmpty(product.ProductImage))
-                                {
-                                    <img src="@product.ProductImage" class="card-img-top" alt="@product.ProductName" style="height: 200px; object-fit: cover;">
-                                }
-                                else
-                                {
-                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                                        <i class="fas fa-image fa-3x text-muted"></i>
-                                    </div>
-                                }
-                                <div class="card-body">
-                                    <h5 class="card-title">@product.ProductName</h5>
-                                    <p class="card-text">@product.ProductDescription</p>
-                                    <p class="card-text">
-                                        <strong>Price: $@product.ProductPrice</strong><br>
-                                        <small class="text-muted">Stock: @product.ProductStock</small>
-                                    </p>
-                                    @if (Context.Session.GetInt32("UserId") != null)
-                                    {
-                                        <a href="@Url.Action("ProductDetails", "Home", new { id = product.ProductId })" class="btn btn-primary">View Details</a>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="alert alert-warning text-center">
-                    <h4>No products available</h4>
-                    <p>Please check back later or contact the administrator.</p>
-                </div>
-            }
-        </div>
-    </div>
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
 </div>

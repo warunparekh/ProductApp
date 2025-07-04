@@ -28,7 +28,7 @@ namespace ProductApp.Controllers
         // Dashboard
         public IActionResult Index() => View();
 
-        // --- Users ---
+        // User Methods
         public async Task<IActionResult> Users()
         {
             var users = _um.Users.ToList();
@@ -49,15 +49,12 @@ namespace ProductApp.Controllers
             }
             return View(vm);
         }
-
-        // Promote user to Admin
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> PromoteToAdmin(string userId)
         {
             var user = await _um.FindByIdAsync(userId);
             if (user == null) return NotFound();
 
-            // Don't allow promoting self
             var currentUserId = _um.GetUserId(User);
             if (user.Id == currentUserId)
             {
@@ -81,14 +78,12 @@ namespace ProductApp.Controllers
             return RedirectToAction(nameof(Users));
         }
 
-        // Remove user from Admin role
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> RemoveFromAdmin(string userId)
         {
             var user = await _um.FindByIdAsync(userId);
             if (user == null) return NotFound();
 
-            // Don't allow demoting self
             var currentUserId = _um.GetUserId(User);
             if (user.Id == currentUserId)
             {
@@ -112,12 +107,10 @@ namespace ProductApp.Controllers
             return RedirectToAction(nameof(Users));
         }
 
-        // --- Categories ---
+        // Categories Method
         public async Task<IActionResult> Categories()
         {
-            var categories = await _db.Categories
-                .Include(c => c.Products)
-                .ToListAsync();
+            var categories = await _db.Categories.Include(c => c.Products).ToListAsync();
             return View(categories);
         }
 
@@ -160,8 +153,6 @@ namespace ProductApp.Controllers
                 TempData["Error"] = "Category not found.";
                 return RedirectToAction(nameof(Categories));
             }
-
-            // Check if category has products
             if (category.Products != null && category.Products.Any())
             {
                 TempData["Error"] = $"Cannot delete category '{category.CategoryName}' because it contains {category.Products.Count} product(s). Please move or delete the products first.";
@@ -188,10 +179,8 @@ namespace ProductApp.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateProduct(Product m, IFormFile ProductImage)
         {
-            // Remove ProductImage validation errors since it's handled separately
             ModelState.Remove("ProductImage");
 
-            // Handle file upload
             if (ProductImage != null && ProductImage.Length > 0)
             {
                 var fileName = Guid.NewGuid() + Path.GetExtension(ProductImage.FileName);
@@ -233,14 +222,12 @@ namespace ProductApp.Controllers
                 return NotFound();
             }
 
-            // Remove ProductImage validation errors since it's handled separately
             ModelState.Remove("ProductImage");
 
             var product = await _db.Products.FindAsync(id);
             if (product == null)
                 return NotFound();
 
-            // Handle file upload
             if (ProductImage != null && ProductImage.Length > 0)
             {
                 var fileName = Guid.NewGuid() + Path.GetExtension(ProductImage.FileName);
@@ -259,7 +246,6 @@ namespace ProductApp.Controllers
                 return View(product);
             }
 
-            // Update product properties
             product.ProductName = m.ProductName;
             product.ProductDescription = m.ProductDescription;
             product.ProductPrice = m.ProductPrice;

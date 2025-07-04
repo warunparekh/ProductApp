@@ -2,10 +2,22 @@
     ViewData["Title"] = "Admin Dashboard";
 }
 
-<h2>@ViewData["Title"]</h2>
+<h1>@ViewData["Title"]</h1>
 
-<div class="list-group">
-    <a asp-action="Users" class="list-group-item list-group-item-action">Manage Users</a>
-    <a asp-action="Categories" class="list-group-item list-group-item-action">Manage Categories</a>
-    <a asp-action="Products" class="list-group-item list-group-item-action">Manage Products</a>
+<div class="row">
+    <div class="col-md-4">
+        <h2>Manage Products</h2>
+        <p>Add, edit, or remove products from your catalog.</p>
+        <p><a class="btn btn-primary" asp-action="Products">Manage Products &raquo;</a></p>
+    </div>
+    <div class="col-md-4">
+        <h2>Manage Categories</h2>
+        <p>Organize your products by managing categories.</p>
+        <p><a class="btn btn-primary" asp-action="Categories">Manage Categories &raquo;</a></p>
+    </div>
+    <div class="col-md-4">
+        <h2>Manage Users</h2>
+        <p>Administer user accounts and permissions.</p>
+        <p><a class="btn btn-primary" asp-action="Users">Manage Users &raquo;</a></p>
+    </div>
 </div>

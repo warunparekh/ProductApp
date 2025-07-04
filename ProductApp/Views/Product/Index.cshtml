@@ -3,31 +3,62 @@
     ViewData["Title"] = "Products";
 }
 
-<h2>@ViewData["Title"]</h2>
+<div class="text-center">
+    <h1 class="display-4">Welcome to ProductApp</h1>
+    <p>Browse our amazing collection of products.</p>
+</div>
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Category</th>
-            <th class="text-end">Price</th>
-            <th class="text-end">Stock</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var p in Model)
+@if (Model != null && Model.Any())
+{
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var product in Model)
         {
-            <tr>
-                <td>@p.ProductName</td>
-                <td>@p.Category?.CategoryName</td>
-                <td class="text-end">@p.ProductPrice:C</td>
-                <td class="text-end">@p.ProductStock</td>
-                <td class="text-end">
-                    <a asp-action="Details" asp-route-id="@p.ProductId"
-                       class="btn btn-sm btn-link">Details</a>
-                </td>
-            </tr>
+            <div class="col">
+                <div class="card h-100">
+                    @if (!string.IsNullOrEmpty(product.ProductImage))
+                    {
+                        <img src="@product.ProductImage" class="card-img-top" alt="@product.ProductName" style="height: 250px; object-fit: cover;">
+                    }
+                    else
+                    {
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px;">
+                            <i class="fas fa-image fa-3x text-muted"></i>
+                        </div>
+                    }
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">@product.ProductName</h5>
+                        <p class="card-text">@product.ProductDescription</p>
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="text-primary mb-0">@product.ProductPrice.ToString("C")</h5>
+                                    <small class="text-muted">Stock: @product.ProductStock</small>
+                                </div>
+                                @if (User.Identity.IsAuthenticated)
+                                {
+                                    <a asp-action="Details" asp-route-id="@product.ProductId" class="btn btn-primary">
+                                        View Details
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary">
+                                        Login to View
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         }
-    </tbody>
-</table>
+    </div>
+}
+else
+{
+    <div class="text-center py-5">
+        <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+        <h3>No Products Available</h3>
+        <p class="text-muted">Check back later for new products!</p>
+    </div>
+}

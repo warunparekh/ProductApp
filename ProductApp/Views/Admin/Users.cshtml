@@ -3,6 +3,8 @@
     ViewData["Title"] = "Manage Users";
 }
 
+<h1>@ViewData["Title"]</h1>
+
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -27,46 +29,37 @@
     </div>
 }
 
-<div class="d-flex justify-content-between align-items-center mt-4 mb-3">
-    <h2>@ViewData["Title"]</h2>
-    <div>
-        <a asp-action="Index" class="btn btn-secondary">Back to Dashboard</a>
-    </div>
-</div>
+<p>
+    <a asp-action="Index" class="btn btn-secondary">Back to Dashboard</a>
+</p>
 
-<table class="table table-bordered table-hover align-middle">
-    <thead class="table-dark">
+<table class="table">
+    <thead>
         <tr>
             <th>Email</th>
             <th>Address</th>
             <th>Roles</th>
-            <th class="text-end">Actions</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var u in Model)
+        @foreach (var user in Model)
         {
-            <tr class="@(u.IsCurrentUser ? "table-info" : "")">
+            <tr class="@(user.IsCurrentUser ? "table-info" : "")">
                 <td>
-                    @u.Email
-                    @if (u.IsCurrentUser)
+                    @user.Email
+                    @if (user.IsCurrentUser)
                     {
-                        <span class="badge bg-primary ms-2">You</span>
+                        <span class="badge bg-primary">You</span>
                     }
                 </td>
-                <td>@(string.IsNullOrEmpty(u.UserAddress) ? "Not provided" : u.UserAddress)</td>
+                <td>@(string.IsNullOrEmpty(user.UserAddress) ? "Not provided" : user.UserAddress)</td>
                 <td>
-                    @if (u.Roles.Any())
+                    @if (user.Roles.Any())
                     {
-                        @foreach (var role in u.Roles)
+                        @foreach (var role in user.Roles)
                         {
-                            <span class="badge @(role == "Admin" ? "bg-danger" : "bg-primary") me-1">
-                                @if (role == "Admin")
-                                {
-                                    <i class="fas fa-crown me-1"></i>
-                                }
-                                @role
-                            </span>
+                            <span class="badge @(role == "Admin" ? "bg-danger" : "bg-primary")">@role</span>
                         }
                     }
                     else
@@ -74,33 +67,27 @@
                         <span class="badge bg-secondary">No roles</span>
                     }
                 </td>
-                <td class="text-end">
-                    @if (!u.IsCurrentUser)
+                <td>
+                    @if (!user.IsCurrentUser)
                     {
-                        @if (u.Roles.Contains("Admin"))
+                        @if (user.Roles.Contains("Admin"))
                         {
-                            <form asp-action="RemoveFromAdmin" method="post" class="d-inline">
-                                <input type="hidden" name="userId" value="@u.Id" />
-                                <button type="submit" class="btn btn-sm btn-warning"
-                                        onclick="return confirm('Remove @u.Email from Admin role?');">
-                                    <i class="fas fa-user-minus me-1"></i>Remove Admin
-                                </button>
+                            <form asp-action="RemoveFromAdmin" method="post" style="display:inline;">
+                                <input type="hidden" name="userId" value="@user.Id" />
+                                <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Are you sure you want to remove admin privileges?')">Remove Admin</button>
                             </form>
                         }
                         else
                         {
-                            <form asp-action="PromoteToAdmin" method="post" class="d-inline">
-                                <input type="hidden" name="userId" value="@u.Id" />
-                                <button type="submit" class="btn btn-sm btn-success"
-                                        onclick="return confirm('Promote @u.Email to Admin?');">
-                                    <i class="fas fa-user-plus me-1"></i>Make Admin
-                                </button>
+                            <form asp-action="PromoteToAdmin" method="post" style="display:inline;">
+                                <input type="hidden" name="userId" value="@user.Id" />
+                                <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Are you sure you want to promote this user to admin?')">Make Admin</button>
                             </form>
                         }
                     }
                     else
                     {
-                        <span class="text-muted">Cannot modify own role</span>
+                        <span class="text-muted">Current User</span>
                     }
                 </td>
             </tr>
