@@ -31,7 +31,7 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// Seed the database
+//seeding database (creating defaults before loading website
 using (var scope = app.Services.CreateScope())
 {
     try
