@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ProductApp.Data;
 using ProductApp.Models;
+using ProductApp.Repositories;
 using ProductApp.ViewModels;
 
 namespace ProductApp.Controllers
@@ -12,23 +11,26 @@ namespace ProductApp.Controllers
     public class AdminController : Controller
     {
         private readonly UserManager<ApplicationUser> _um;
-        private readonly ApplicationDbContext _db;
         private readonly IWebHostEnvironment _env;
+        private readonly ProductRepository _productRepo;
+        private readonly CategoryRepository _categoryRepo;
 
         public AdminController(
             UserManager<ApplicationUser> um,
-            ApplicationDbContext db,
-            IWebHostEnvironment env)
+            IWebHostEnvironment env,
+            ProductRepository productRepo,
+            CategoryRepository categoryRepo)
         {
             _um = um;
-            _db = db;
             _env = env;
+            _productRepo = productRepo;
+            _categoryRepo = categoryRepo;
         }
 
         // Dashboard
         public IActionResult Index() => View();
 
-        // User Methods
+        // User Management
         public async Task<IActionResult> Users()
         {
             var users = _um.Users.ToList();
@@ -49,6 +51,7 @@ namespace ProductApp.Controllers
             }
             return View(vm);
         }
+
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> PromoteToAdmin(string userId)
         {
@@ -107,10 +110,10 @@ namespace ProductApp.Controllers
             return RedirectToAction(nameof(Users));
         }
 
-        // Categories Method
+        // --- Categories ---
         public async Task<IActionResult> Categories()
         {
-            var categories = await _db.Categories.Include(c => c.Products).ToListAsync();
+            var categories = await _categoryRepo.GetAllWithProductCountAsync();
             return View(categories);
         }
 
@@ -121,22 +124,24 @@ namespace ProductApp.Controllers
         public async Task<IActionResult> CreateCategory(Category m)
         {
             if (!ModelState.IsValid) return View(m);
-            _db.Categories.Add(m);
-            await _db.SaveChangesAsync();
+            await _categoryRepo.AddAsync(m);
             TempData["Success"] = "Category created successfully.";
             return RedirectToAction(nameof(Categories));
         }
 
         [HttpGet]
         public async Task<IActionResult> EditCategory(int id)
-            => View(await _db.Categories.FindAsync(id));
+        {
+            var category = await _categoryRepo.GetByIdAsync(id);
+            if (category == null) return NotFound();
+            return View(category);
+        }
 
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> EditCategory(int id, Category m)
         {
             if (id != m.CategoryId || !ModelState.IsValid) return View(m);
-            _db.Categories.Update(m);
-            await _db.SaveChangesAsync();
+            await _categoryRepo.UpdateAsync(m);
             TempData["Success"] = "Category updated successfully.";
             return RedirectToAction(nameof(Categories));
         }
@@ -144,35 +149,22 @@ namespace ProductApp.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteCategory(int id)
         {
-            var category = await _db.Categories
-                .Include(c => c.Products)
-                .FirstOrDefaultAsync(c => c.CategoryId == id);
-
-            if (category == null)
-            {
-                TempData["Error"] = "Category not found.";
-                return RedirectToAction(nameof(Categories));
-            }
-            if (category.Products != null && category.Products.Any())
-            {
-                TempData["Error"] = $"Cannot delete category '{category.CategoryName}' because it contains {category.Products.Count} product(s). Please move or delete the products first.";
-                return RedirectToAction(nameof(Categories));
-            }
-
-            _db.Categories.Remove(category);
-            await _db.SaveChangesAsync();
-            TempData["Success"] = $"Category '{category.CategoryName}' deleted successfully.";
+            await _categoryRepo.DeleteAsync(id);
+            TempData["Success"] = $"Category deleted successfully.";
             return RedirectToAction(nameof(Categories));
         }
 
         // --- Products ---
         public async Task<IActionResult> Products()
-            => View(await _db.Products.Include(p => p.Category).ToListAsync());
+        {
+            var products = await _productRepo.GetAllWithCategoryNameAsync();
+            return View(products);
+        }
 
         [HttpGet]
         public async Task<IActionResult> CreateProduct()
         {
-            ViewData["Categories"] = await _db.Categories.ToListAsync();
+            ViewData["Categories"] = await _categoryRepo.GetAllAsync();
             return View();
         }
 
@@ -195,12 +187,11 @@ namespace ProductApp.Controllers
 
             if (!ModelState.IsValid)
             {
-                ViewData["Categories"] = await _db.Categories.ToListAsync();
+                ViewData["Categories"] = await _categoryRepo.GetAllAsync();
                 return View(m);
             }
 
-            _db.Products.Add(m);
-            await _db.SaveChangesAsync();
+            await _productRepo.AddAsync(m);
             TempData["Success"] = "Product created successfully.";
             return RedirectToAction(nameof(Products));
         }
@@ -208,9 +199,9 @@ namespace ProductApp.Controllers
         [HttpGet]
         public async Task<IActionResult> EditProduct(int id)
         {
-            var p = await _db.Products.FindAsync(id);
+            var p = await _productRepo.GetByIdAsync(id);
             if (p == null) return NotFound();
-            ViewData["Categories"] = await _db.Categories.ToListAsync();
+            ViewData["Categories"] = await _categoryRepo.GetAllAsync();
             return View(p);
         }
 
@@ -224,7 +215,7 @@ namespace ProductApp.Controllers
 
             ModelState.Remove("ProductImage");
 
-            var product = await _db.Products.FindAsync(id);
+            var product = await _productRepo.GetByIdAsync(id);
             if (product == null)
                 return NotFound();
 
@@ -237,23 +228,20 @@ namespace ProductApp.Controllers
                 {
                     await ProductImage.CopyToAsync(stream);
                 }
-                product.ProductImage = "/images/" + fileName;
+                m.ProductImage = "/images/" + fileName;
+            }
+            else
+            {
+                m.ProductImage = product.ProductImage;
             }
 
             if (!ModelState.IsValid)
             {
-                ViewData["Categories"] = await _db.Categories.ToListAsync();
-                return View(product);
+                ViewData["Categories"] = await _categoryRepo.GetAllAsync();
+                return View(m);
             }
 
-            product.ProductName = m.ProductName;
-            product.ProductDescription = m.ProductDescription;
-            product.ProductPrice = m.ProductPrice;
-            product.ProductStock = m.ProductStock;
-            product.CategoryId = m.CategoryId;
-
-            _db.Products.Update(product);
-            await _db.SaveChangesAsync();
+            await _productRepo.UpdateAsync(m);
             TempData["Success"] = "Product updated successfully.";
             return RedirectToAction(nameof(Products));
         }
@@ -261,13 +249,8 @@ namespace ProductApp.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteProduct(int id)
         {
-            var p = await _db.Products.FindAsync(id);
-            if (p != null)
-            {
-                _db.Products.Remove(p);
-                await _db.SaveChangesAsync();
-                TempData["Success"] = "Product deleted successfully.";
-            }
+            await _productRepo.DeleteAsync(id);
+            TempData["Success"] = "Product deleted successfully.";
             return RedirectToAction(nameof(Products));
         }
     }

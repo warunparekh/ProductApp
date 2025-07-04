@@ -1,15 +1,17 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using ProductApp.Data;
 using ProductApp.Models;
+using ProductApp.Repositories;
+using System.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1) DbContext + SQL Server
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 2) Identity with ApplicationUser + roles
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(opts =>
 {
     opts.SignIn.RequireConfirmedAccount = false;
@@ -18,12 +20,17 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(opts =>
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-// 3) MVC
+
+builder.Services.AddScoped<IDbConnection>(sp =>
+    new SqlConnection(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<ProductRepository>();
+builder.Services.AddScoped<CategoryRepository>();
+
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// 4) Create DB & seed default roles/admin
 using (var scope = app.Services.CreateScope())
 {
     var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -31,7 +38,6 @@ using (var scope = app.Services.CreateScope())
     await DatabaseSeeder.SeedAsync(scope.ServiceProvider);
 }
 
-// 5) Middleware
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -43,7 +49,6 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 6) Routing
 app.MapControllerRoute(
     name: "admin",
     pattern: "Admin/{action=Index}/{id?}",

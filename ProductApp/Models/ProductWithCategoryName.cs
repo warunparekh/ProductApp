@@ -1,28 +1,14 @@
-﻿using Dapper.Contrib.Extensions;
-using System.ComponentModel.DataAnnotations;
-
 namespace ProductApp.Models
 {
-    [Table("Products")]
-    public class Product
+    public class ProductWithCategoryName
     {
-        [Dapper.Contrib.Extensions.Key]
         public int ProductId { get; set; }
-
-        [Required, StringLength(100)]
         public string ProductName { get; set; }
-
-        [StringLength(500)]
         public string ProductDescription { get; set; }
-
-        [Required]
         public decimal ProductPrice { get; set; }
-
-        [Required]
         public int ProductStock { get; set; }
         public string? ProductImage { get; set; }
-
-        [Required]
         public int CategoryId { get; set; }
+        public string CategoryName { get; set; }
     }
 }

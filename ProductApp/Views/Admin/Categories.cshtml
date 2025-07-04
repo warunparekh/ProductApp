@@ -1,4 +1,4 @@
-@model IEnumerable<ProductApp.Models.Category>
+@model IEnumerable<ProductApp.Models.CategoryWithCount>
 @{
     ViewData["Title"] = "Manage Categories";
 }
@@ -43,13 +43,13 @@
                 <td>@c.CategoryId</td>
                 <td>@c.CategoryName</td>
                 <td>
-                    <span class="badge bg-info">@(c.Products?.Count ?? 0) products</span>
+                    <span class="badge bg-info">@c.ProductCount products</span>
                 </td>
                 <td class="text-end">
                     <a asp-action="EditCategory" asp-route-id="@c.CategoryId"
                        class="btn btn-sm btn-warning">Edit</a>
 
-                    @if (c.Products == null || !c.Products.Any())
+                    @if (c.ProductCount == 0)
                     {
                         <form asp-action="DeleteCategory" method="post" class="d-inline">
                             <input type="hidden" name="id" value="@c.CategoryId" />

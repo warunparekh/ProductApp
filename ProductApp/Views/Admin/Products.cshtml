@@ -1,4 +1,4 @@
-@model IEnumerable<ProductApp.Models.Product>
+@model IEnumerable<ProductApp.Models.ProductWithCategoryName>
 @{
     ViewData["Title"] = "Manage Products";
 }
@@ -54,7 +54,7 @@
                     }
                 </td>
                 <td>@p.ProductName</td>
-                <td>@p.Category?.CategoryName</td>
+                <td>@p.CategoryName</td>
                 <td class="text-end">@p.ProductPrice.ToString("C")</td>
                 <td class="text-end">@p.ProductStock</td>
                 <td class="text-end">
@@ -72,7 +72,6 @@
     </tbody>
 </table>
 
-<!-- Image Modal -->
 <div class="modal fade" id="imageModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">

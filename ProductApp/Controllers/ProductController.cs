@@ -1,26 +1,25 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
-using ProductApp.Data;
+using ProductApp.Repositories;
 
 namespace ProductApp.Controllers
 {
     public class ProductController : Controller
     {
-        private readonly ApplicationDbContext _db;
-        public ProductController(ApplicationDbContext db) => _db = db;
+        private readonly ProductRepository _productRepo;
+        public ProductController(ProductRepository productRepo) => _productRepo = productRepo;
 
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var list = await _db.Products.Include(p => p.Category).ToListAsync();
+            var list = await _productRepo.GetAllAsync();
             return View(list);
         }
 
-        [HttpGet, Authorize]
+        [HttpGet, Authorize]        
         public async Task<IActionResult> Details(int id)
         {
-            var item = await _db.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.ProductId == id);
+            var item = await _productRepo.GetByIdWithCategoryNameAsync(id);
             if (item == null) return NotFound();
             return View(item);
         }
