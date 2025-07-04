@@ -7,6 +7,7 @@ namespace ProductApp.ViewModels
         public string Id { get; set; }
         public string Email { get; set; }
         public string UserAddress { get; set; }
-        public IEnumerable<string> Roles { get; set; }
+        public ICollection<string> Roles { get; set; }
+        public bool IsCurrentUser { get; set; }
     }
 }

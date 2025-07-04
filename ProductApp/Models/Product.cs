@@ -8,21 +8,23 @@ namespace ProductApp.Models
         [Key]
         public int ProductId { get; set; }
 
-        [Required, StringLength(200)]
+        [Required, StringLength(100)]
         public string ProductName { get; set; }
 
-        [StringLength(1000)]
+        [StringLength(500)]
         public string ProductDescription { get; set; }
 
-        [Column(TypeName = "decimal(18,2)")]
+        [Required]
         public decimal ProductPrice { get; set; }
 
-        [StringLength(500)]
-        public string ProductImage { get; set; }
-
+        [Required]
         public int ProductStock { get; set; }
+        public string? ProductImage { get; set; }
 
+        [Required]
         public int CategoryId { get; set; }
-        public Category Category { get; set; }
+
+        [ForeignKey("CategoryId")]
+        public Category? Category { get; set; }
     }
 }

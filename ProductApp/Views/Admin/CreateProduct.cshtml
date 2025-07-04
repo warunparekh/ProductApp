@@ -3,43 +3,60 @@
 @{
     ViewData["Title"] = "Create Product";
     var categories = ViewData["Categories"] as List<ProductApp.Models.Category>;
-    var categoryList = new SelectList(categories, "Id", "Name");
+    var categoryList = new SelectList(categories, "CategoryId", "CategoryName", Model?.CategoryId);
 }
 
-<h2>@ViewData["Title"]</h2>
-
-<form asp-action="CreateProduct" method="post" novalidate>
-    <div asp-validation-summary="All" class="text-danger"></div>
-
-    <div class="mb-3">
-        <label asp-for="ProductName" class="form-label"></label>
-        <input asp-for="ProductName" class="form-control" />
-        <span asp-validation-for="ProductName" class="text-danger"></span>
+<div class="card shadow-sm mt-4">
+    <div class="card-header bg-primary text-white">
+        <h2 class="mb-0">@ViewData["Title"]</h2>
     </div>
+    <div class="card-body">
+        <form asp-action="CreateProduct" method="post" enctype="multipart/form-data" novalidate>
+            <div asp-validation-summary="All" class="text-danger"></div>
 
-    <div class="mb-3">
-        <label asp-for="ProductPrice" class="form-label"></label>
-        <input asp-for="ProductPrice" class="form-control" />
-        <span asp-validation-for="ProductPrice" class="text-danger"></span>
+            <div class="mb-3">
+                <label asp-for="ProductName" class="form-label"></label>
+                <input asp-for="ProductName" class="form-control" />
+                <span asp-validation-for="ProductName" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ProductDescription" class="form-label"></label>
+                <textarea asp-for="ProductDescription" class="form-control"></textarea>
+                <span asp-validation-for="ProductDescription" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ProductPrice" class="form-label"></label>
+                <input asp-for="ProductPrice" class="form-control" />
+                <span asp-validation-for="ProductPrice" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ProductStock" class="form-label"></label>
+                <input asp-for="ProductStock" class="form-control" />
+                <span asp-validation-for="ProductStock" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="CategoryId" class="form-label"></label>
+                <select asp-for="CategoryId" class="form-select" asp-items="categoryList">
+                    <option value="">-- Select Category --</option>
+                </select>
+                <span asp-validation-for="CategoryId" class="text-danger"></span>
+            </div>
+
+            <!-- FIXED: Correct label and removed validation for file input -->
+            <div class="mb-3">
+                <label for="ProductImageFile" class="form-label">Product Image</label>
+                <input name="ProductImage" id="ProductImageFile" class="form-control" type="file" />
+            </div>
+
+            <button type="submit" class="btn btn-success">Create</button>
+            <a asp-action="Products" class="btn btn-secondary">Cancel</a>
+        </form>
     </div>
-
-    <div class="mb-3">
-        <label asp-for="CategoryId" class="form-label"></label>
-        <select asp-for="CategoryId" class="form-select" asp-items="categoryList">
-            <option value="">-- Select Category --</option>
-        </select>
-        <span asp-validation-for="CategoryId" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="ProductDescription" class="form-label"></label>
-        <textarea asp-for="ProductDescription" class="form-control"></textarea>
-        <span asp-validation-for="ProductDescription" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Create</button>
-    <a asp-action="Products" class="btn btn-link">Cancel</a>
-</form>
+</div>
 
 @section Scripts {
     @{

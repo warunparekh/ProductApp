@@ -3,20 +3,36 @@
     ViewData["Title"] = "Manage Categories";
 }
 
-<h2>@ViewData["Title"]</h2>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
 
-<p>
-    <a asp-action="CreateCategory" class="btn btn-primary">New Category</a>
-    <a asp-controller="Admin" asp-action="Index" class="btn btn-secondary">
-        Dashboard
-    </a>
-</p>
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
 
-<table class="table table-hover">
-    <thead>
+<div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+    <h2>@ViewData["Title"]</h2>
+    <div>
+        <a asp-action="CreateCategory" class="btn btn-primary me-2">New Category</a>
+        <a asp-controller="Admin" asp-action="Index" class="btn btn-secondary">Dashboard</a>
+    </div>
+</div>
+
+<table class="table table-hover align-middle">
+    <thead class="table-dark">
         <tr>
             <th>ID</th>
             <th>Name</th>
+            <th>Products Count</th>
             <th class="text-end">Actions</th>
         </tr>
     </thead>
@@ -26,16 +42,30 @@
             <tr>
                 <td>@c.CategoryId</td>
                 <td>@c.CategoryName</td>
+                <td>
+                    <span class="badge bg-info">@(c.Products?.Count ?? 0) products</span>
+                </td>
                 <td class="text-end">
                     <a asp-action="EditCategory" asp-route-id="@c.CategoryId"
                        class="btn btn-sm btn-warning">Edit</a>
-                    <form asp-action="DeleteCategory" method="post" class="d-inline">
-                        <input type="hidden" name="id" value="@c.CategoryId" />
-                        <button type="submit" class="btn btn-sm btn-danger"
-                                onclick="return confirm('Delete?');">
+
+                    @if (c.Products == null || !c.Products.Any())
+                    {
+                        <form asp-action="DeleteCategory" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@c.CategoryId" />
+                            <button type="submit" class="btn btn-sm btn-danger"
+                                    onclick="return confirm('Are you sure you want to delete this category?');">
+                                Delete
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-sm btn-danger" disabled
+                                title="Cannot delete category with products">
                             Delete
                         </button>
-                    </form>
+                    }
                 </td>
             </tr>
         }

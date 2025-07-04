@@ -3,21 +3,24 @@
     ViewData["Title"] = "Edit Category";
 }
 
-<h2>@ViewData["Title"]</h2>
-
-<form asp-action="EditCategory" method="post" novalidate>
-    <input type="hidden" asp-for="CategoryId" />
-    <div asp-validation-summary="All" class="text-danger"></div>
-
-    <div class="mb-3">
-        <label asp-for="CategoryName" class="form-label"></label>
-        <input asp-for="CategoryName" class="form-control" />
-        <span asp-validation-for="CategoryName" class="text-danger"></span>
+<div class="card shadow-sm mt-4">
+    <div class="card-header bg-primary text-white">
+        <h2 class="mb-0">@ViewData["Title"]</h2>
     </div>
-
-    <button type="submit" class="btn btn-primary">Save</button>
-    <a asp-action="Categories" class="btn btn-link">Cancel</a>
-</form>
+    <div class="card-body">
+        <form asp-action="EditCategory" method="post" novalidate>
+            <input type="hidden" asp-for="CategoryId" />
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="CategoryName" class="form-label"></label>
+                <input asp-for="CategoryName" class="form-control" />
+                <span asp-validation-for="CategoryName" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-success">Save</button>
+            <a asp-action="Categories" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
 
 @section Scripts {
     @{

@@ -3,19 +3,30 @@
     ViewData["Title"] = "Manage Products";
 }
 
-<h2>@ViewData["Title"]</h2>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
 
-<p>
-    <a asp-action="CreateProduct" class="btn btn-primary">Create New Product</a>
-    <a asp-action="Index" asp-controller="Admin" class="btn btn-secondary">Back to Dashboard</a>
-</p>
+<div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+    <h2>@ViewData["Title"]</h2>
+    <div>
+        <a asp-action="CreateProduct" class="btn btn-primary me-2">Create New Product</a>
+        <a asp-action="Index" asp-controller="Admin" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
 
-<table class="table table-striped">
-    <thead>
+<table class="table table-striped table-hover align-middle">
+    <thead class="table-dark">
         <tr>
+            <th>Image</th>
             <th>Name</th>
             <th>Category</th>
             <th class="text-end">Price</th>
+            <th class="text-end">Stock</th>
             <th class="text-end">Actions</th>
         </tr>
     </thead>
@@ -23,9 +34,29 @@
         @foreach (var p in Model)
         {
             <tr>
+                <td>
+                    @if (!string.IsNullOrEmpty(p.ProductImage))
+                    {
+                        <img src="@p.ProductImage" alt="@p.ProductName"
+                             class="img-thumbnail"
+                             style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
+                             data-bs-toggle="modal"
+                             data-bs-target="#imageModal"
+                             data-src="@p.ProductImage"
+                             data-title="@p.ProductName" />
+                    }
+                    else
+                    {
+                        <div class="bg-light d-flex align-items-center justify-content-center rounded"
+                             style="width: 60px; height: 60px;">
+                            <i class="fas fa-image text-muted"></i>
+                        </div>
+                    }
+                </td>
                 <td>@p.ProductName</td>
                 <td>@p.Category?.CategoryName</td>
-                <td class="text-end">@p.ProductPrice:C</td>
+                <td class="text-end">@p.ProductPrice.ToString("C")</td>
+                <td class="text-end">@p.ProductStock</td>
                 <td class="text-end">
                     <a asp-action="EditProduct" asp-route-id="@p.ProductId" class="btn btn-sm btn-warning">Edit</a>
                     <form asp-action="DeleteProduct" method="post" class="d-inline">
@@ -40,3 +71,38 @@
         }
     </tbody>
 </table>
+
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">Product Image</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="" class="img-fluid" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const imageModal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            const modalTitle = document.getElementById('imageModalLabel');
+
+            imageModal.addEventListener('show.bs.modal', function(event) {
+                const trigger = event.relatedTarget;
+                const imageSrc = trigger.getAttribute('data-src');
+                const imageTitle = trigger.getAttribute('data-title');
+
+                modalImage.src = imageSrc;
+                modalImage.alt = imageTitle;
+                modalTitle.textContent = imageTitle;
+            });
+        });
+    </script>
+}
