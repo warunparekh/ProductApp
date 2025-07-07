@@ -263,24 +263,30 @@ namespace ProductApp.Controllers
             TempData["Success"] = "Product deleted successfully.";
             return RedirectToAction(nameof(Products));
         }
-
         // --- Cart Management ---
         [HttpGet]
         public async Task<IActionResult> ActiveCarts()
         {
             var allCarts = await _cartRepo.GetAllAsync();
             var allUsers = _um.Users.ToList();
+            var allProductIdsInCarts = allCarts.Select(c => c.ProductId).Distinct();
+            var allProducts = await _productRepo.GetByIdsAsync(allProductIdsInCarts);
 
             var activeCarts = allCarts
                 .GroupBy(c => c.UserId)
                 .Select(g => {
                     var user = allUsers.FirstOrDefault(u => u.Id == g.Key);
+                    var totalPrice = g.Sum(cartItem => {
+                        var product = allProducts.FirstOrDefault(p => p.ProductId == cartItem.ProductId);
+                        return cartItem.ProductQuantity * (product?.ProductPrice ?? 0);
+                    });
+
                     return new ActiveCartViewModel
                     {
                         UserId = g.Key,
                         UserEmail = user?.Email ?? "Unknown User",
                         ItemCount = g.Sum(c => c.ProductQuantity),
-                        TotalPrice = g.Sum(c => c.CartTotalPrice)
+                        TotalPrice = totalPrice
                     };
                 })
                 .Where(vm => vm.ItemCount > 0)
@@ -364,14 +370,12 @@ namespace ProductApp.Controllers
                 return NotFound();
             }
 
-            // **PREVENTION LOGIC**: If order is already cancelled, do not allow changes.
             if (order.Status == DispatchStatus.Cancelled)
             {
                 TempData["Error"] = "This order has been cancelled and its status cannot be changed.";
                 return RedirectToAction("OrderDetails", new { id = orderId });
             }
 
-            // If the order is being newly cancelled, restock the items.
             if (status == DispatchStatus.Cancelled)
             {
                 var orderDetails = await _orderRepo.GetDetailsByOrderIdAsync(orderId);

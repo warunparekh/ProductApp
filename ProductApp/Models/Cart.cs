@@ -10,8 +10,5 @@ namespace ProductApp.Models
         public string UserId { get; set; }
         public int ProductId { get; set; }
         public int ProductQuantity { get; set; }
-        public decimal ProductNetprice { get; set; }
-        public string ProductName { get; set; }
-        public decimal CartTotalPrice { get; set; }
     }
 }

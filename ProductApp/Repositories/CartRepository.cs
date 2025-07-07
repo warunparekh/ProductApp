@@ -1,25 +1,33 @@
-﻿using Dapper.Contrib.Extensions;
+﻿using Dapper;
+using Dapper.Contrib.Extensions;
 using ProductApp.Models;
-using System.Data;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Data;
 using System.Linq;
-using Dapper; // Add this using statement
+using System.Threading.Tasks;
 
 namespace ProductApp.Repositories
 {
     public class CartRepository
     {
         private readonly IDbConnection _db;
+        private const string GetCartFields = "SELECT CartId, UserId, ProductId, ProductQuantity FROM Cart";
+
         public CartRepository(IDbConnection db)
         {
             _db = db;
         }
 
+        // This is the single, robust method for getting cart data.
+        private async Task<IEnumerable<Cart>> GetAllCartsFromDbAsync()
+        {
+            return await _db.QueryAsync<Cart>(GetCartFields);
+        }
+
         public async Task<IEnumerable<Cart>> GetByUserIdAsync(string userId)
         {
-            var all = await this.GetAllAsync(); // Use the new robust method
-            return all.Where(c => c.UserId == userId);
+            var allCarts = await GetAllCartsFromDbAsync();
+            return allCarts.Where(c => c.UserId == userId);
         }
 
         public async Task AddAsync(Cart cart)
@@ -39,20 +47,19 @@ namespace ProductApp.Repositories
 
         public async Task<Cart> GetCartItemAsync(int productId, string userId)
         {
-            var all = await this.GetAllAsync(); // Use the new robust method
-            return all.FirstOrDefault(c => c.ProductId == productId && c.UserId == userId);
+            var userCart = await GetByUserIdAsync(userId);
+            return userCart.FirstOrDefault(c => c.ProductId == productId);
         }
 
         public async Task<bool> IsProductInCartAsync(int productId, string userId)
         {
-            var all = await this.GetAllAsync(); // Use the new robust method
-            return all.Any(c => c.ProductId == productId && c.UserId == userId);
+            var item = await GetCartItemAsync(productId, userId);
+            return item != null;
         }
 
         public async Task ClearCartAsync(string userId)
         {
-            var all = await this.GetAllAsync(); // Use the new robust method
-            var userCarts = all.Where(c => c.UserId == userId).ToList();
+            var userCarts = await GetByUserIdAsync(userId);
             foreach (var cart in userCarts)
             {
                 await _db.DeleteAsync(cart);
@@ -61,15 +68,13 @@ namespace ProductApp.Repositories
 
         public async Task<int> GetCartItemCountAsync(string userId)
         {
-            var all = await this.GetAllAsync(); // Use the new robust method
-            return all.Count(c => c.UserId == userId);
+            var userCarts = await GetByUserIdAsync(userId);
+            return userCarts.Count();
         }
 
-        // CORRECTED METHOD: Use a specific Dapper query instead of GetAllAsync
         public async Task<IEnumerable<Cart>> GetAllAsync()
         {
-            var sql = "SELECT CartId, UserId, ProductId, ProductQuantity, ProductNetprice, ProductName, CartTotalPrice FROM Cart";
-            return await _db.QueryAsync<Cart>(sql);
+            return await GetAllCartsFromDbAsync();
         }
     }
 }

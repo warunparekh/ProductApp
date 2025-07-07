@@ -18,12 +18,16 @@
     <tbody>
         @foreach (var item in Model)
         {
-            <tr>
-                <td>@item.Product?.ProductName</td>
-                <td>@item.Cart.ProductQuantity</td>
-                <td>@item.Cart.ProductNetprice.ToString("C")</td>
-                <td>@item.Cart.CartTotalPrice.ToString("C")</td>
-            </tr>
+            var product = item.Product;
+            if (product != null)
+            {
+                <tr>
+                    <td>@product.ProductName</td>
+                    <td>@item.Cart.ProductQuantity</td>
+                    <td>@product.ProductPrice.ToString("C")</td>
+                    <td>@((item.Cart.ProductQuantity * product.ProductPrice).ToString("C"))</td>
+                </tr>
+            }
         }
     </tbody>
 </table>

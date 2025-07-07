@@ -34,28 +34,8 @@ namespace ProductApp.Controllers
 
             var productIds = cartItems.Select(c => c.ProductId).ToList();
             var products = (await _productRepo.GetByIdsAsync(productIds)).ToList();
-            bool cartUpdated = false;
 
-            // **PRICE SYNCHRONIZATION LOGIC**
-            // Loop through each item and verify its price against the product catalog.
-            foreach (var item in cartItems)
-            {
-                var product = products.FirstOrDefault(p => p.ProductId == item.ProductId);
-                if (product != null && item.ProductNetprice != product.ProductPrice)
-                {
-                    // Price has changed, update the cart item.
-                    item.ProductNetprice = product.ProductPrice;
-                    item.CartTotalPrice = item.ProductQuantity * product.ProductPrice;
-                    await _cartRepo.UpdateAsync(item);
-                    cartUpdated = true;
-                }
-            }
-
-            if (cartUpdated)
-            {
-                TempData["Info"] = "Some prices in your cart have been updated to reflect the latest values.";
-            }
-
+            // Build the ViewModel by joining cart data with live product data
             var viewModel = cartItems.Select(c => new CartItemViewModel
             {
                 Cart = c,
@@ -70,19 +50,11 @@ namespace ProductApp.Controllers
         public async Task<IActionResult> AddToCart(int productId, int quantity)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var product = (await _productRepo.GetByIdsAsync(new[] { productId })).FirstOrDefault();
-            if (product == null)
-            {
-                return NotFound("Product not found.");
-            }
-
             var existingItem = await _cartRepo.GetCartItemAsync(productId, userId);
 
             if (existingItem != null)
             {
                 existingItem.ProductQuantity += quantity;
-                existingItem.ProductNetprice = product.ProductPrice; // Always use latest price
-                existingItem.CartTotalPrice = existingItem.ProductQuantity * existingItem.ProductNetprice;
                 await _cartRepo.UpdateAsync(existingItem);
             }
             else
@@ -91,10 +63,7 @@ namespace ProductApp.Controllers
                 {
                     UserId = userId,
                     ProductId = productId,
-                    ProductQuantity = quantity,
-                    ProductNetprice = product.ProductPrice,
-                    ProductName = product.ProductName,
-                    CartTotalPrice = quantity * product.ProductPrice
+                    ProductQuantity = quantity
                 };
                 await _cartRepo.AddAsync(cartItem);
             }
@@ -116,7 +85,6 @@ namespace ProductApp.Controllers
                         if (item.Quantity > 0)
                         {
                             cartItem.ProductQuantity = item.Quantity;
-                            cartItem.CartTotalPrice = item.Quantity * cartItem.ProductNetprice;
                             await _cartRepo.UpdateAsync(cartItem);
                         }
                         else

@@ -1,8 +1,15 @@
 ﻿@model IEnumerable<ProductApp.Models.Cart>
+@using ProductApp.Models
 
 @{
     ViewData["Title"] = "Checkout";
-    var grandTotal = Model.Sum(item => item.CartTotalPrice);
+    var products = ViewBag.Products as List<Product>;
+    var user = ViewBag.User as ApplicationUser;
+    var grandTotal = Model.Sum(item =>
+    {
+        var product = products?.FirstOrDefault(p => p.ProductId == item.ProductId);
+        return item.ProductQuantity * (product?.ProductPrice ?? 0);
+    });
 }
 
 <h1>Confirm Your Order</h1>
@@ -13,13 +20,17 @@
         <ul class="list-group mb-3">
             @foreach (var item in Model)
             {
-                <li class="list-group-item d-flex justify-content-between lh-sm">
-                    <div>
-                        <h6 class="my-0">@item.ProductName</h6>
-                        <small class="text-muted">Quantity: @item.ProductQuantity</small>
-                    </div>
-                    <span class="text-muted">@item.CartTotalPrice.ToString("C")</span>
-                </li>
+                var product = products?.FirstOrDefault(p => p.ProductId == item.ProductId);
+                if (product != null)
+                {
+                    <li class="list-group-item d-flex justify-content-between lh-sm">
+                        <div>
+                            <h6 class="my-0">@product.ProductName</h6>
+                            <small class="text-muted">Quantity: @item.ProductQuantity</small>
+                        </div>
+                        <span class="text-muted">@((item.ProductQuantity * product.ProductPrice).ToString("C"))</span>
+                    </li>
+                }
             }
             <li class="list-group-item d-flex justify-content-between">
                 <strong>Total (USD)</strong>
@@ -33,7 +44,7 @@
             @Html.AntiForgeryToken()
             <div class="mb-3">
                 <label for="shippingAddress" class="form-label">Shipping Address</label>
-                <textarea name="shippingAddress" id="shippingAddress" class="form-control" rows="3">@ViewBag.ShippingAddress</textarea>
+                <textarea name="shippingAddress" id="shippingAddress" class="form-control" rows="3">@user?.UserAddress</textarea>
             </div>
             <div class="d-grid">
                 <button type="submit" class="btn btn-primary btn-lg">Place Order</button>
