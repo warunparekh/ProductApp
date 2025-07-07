@@ -1,0 +1,32 @@
+﻿@model IEnumerable<ProductApp.Models.ViewModels.ActiveCartViewModel>
+
+@{
+    ViewData["Title"] = "Active Shopping Carts";
+}
+
+<h1>@ViewData["Title"]</h1>
+<p>A list of users who currently have items in their shopping cart.</p>
+
+<table class="table table-striped table-hover mt-4">
+    <thead class="table-light">
+        <tr>
+            <th>User Email</th>
+            <th>Item Count</th>
+            <th>Total Value</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var cart in Model)
+        {
+            <tr>
+                <td>@cart.UserEmail</td>
+                <td>@cart.ItemCount</td>
+                <td>@cart.TotalPrice.ToString("C")</td>
+                <td class="text-end">
+                    <a asp-action="ViewUserCart" asp-route-userId="@cart.UserId" class="btn btn-sm btn-primary">View Cart</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,36 @@
+﻿@model IEnumerable<ProductApp.Models.Order>
+
+@{
+    ViewData["Title"] = "Manage Orders";
+    var users = ViewBag.Users as Dictionary<string, string>;
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<table class="table table-striped table-hover mt-4">
+    <thead class="table-light">
+        <tr>
+            <th>Order ID</th>
+            <th>User</th>
+            <th>Order Date</th>
+            <th>Total Amount</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var order in Model)
+        {
+            <tr>
+                <td>@order.OrderId</td>
+                <td>@(users.ContainsKey(order.UserId) ? users[order.UserId] : "Unknown")</td>
+                <td>@order.OrderDate.ToString("g")</td>
+                <td>@order.TotalAmount.ToString("C")</td>
+                <td>@order.Status</td>
+                <td class="text-end">
+                    <a asp-action="OrderDetails" asp-route-id="@order.OrderId" class="btn btn-sm btn-info">View Details</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

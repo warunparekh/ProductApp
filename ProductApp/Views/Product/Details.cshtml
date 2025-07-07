@@ -57,12 +57,23 @@
         <div class="d-grid gap-2 d-md-flex">
             @if (Model.ProductStock > 0)
             {
-                <button class="btn btn-primary btn-lg me-md-2" type="button">
-                    <i class="fas fa-cart-plus me-2"></i>Add to Cart
-                </button>
-                <button class="btn btn-success btn-lg" type="button">
-                    <i class="fas fa-bolt me-2"></i>Buy Now
-                </button>
+                <form asp-controller="Cart" asp-action="AddToCart" method="post" class="d-inline">
+                    <input type="hidden" name="productId" value="@Model.ProductId" />
+                    <input type="hidden" name="quantity" value="1" />
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-cart-plus me-2"></i>Add To Cart
+                    </button>
+                </form>
+
+                <form asp-controller="Order" asp-action="BuyNow" method="post" class="d-inline">
+                    <input type="hidden" name="productId" value="@Model.ProductId" />
+                    <input type="hidden" name="quantity" value="1" />
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-bolt me-2"></i>Buy Now
+                    </button>
+                </form>
             }
             else
             {

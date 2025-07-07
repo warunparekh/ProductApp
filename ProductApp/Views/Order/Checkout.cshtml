@@ -1,0 +1,43 @@
+﻿@model IEnumerable<ProductApp.Models.Cart>
+
+@{
+    ViewData["Title"] = "Checkout";
+    var grandTotal = Model.Sum(item => item.CartTotalPrice);
+}
+
+<h1>Confirm Your Order</h1>
+
+<div class="row mt-4">
+    <div class="col-md-7">
+        <h4>Order Summary</h4>
+        <ul class="list-group mb-3">
+            @foreach (var item in Model)
+            {
+                <li class="list-group-item d-flex justify-content-between lh-sm">
+                    <div>
+                        <h6 class="my-0">@item.ProductName</h6>
+                        <small class="text-muted">Quantity: @item.ProductQuantity</small>
+                    </div>
+                    <span class="text-muted">@item.CartTotalPrice.ToString("C")</span>
+                </li>
+            }
+            <li class="list-group-item d-flex justify-content-between">
+                <strong>Total (USD)</strong>
+                <strong>@grandTotal.ToString("C")</strong>
+            </li>
+        </ul>
+    </div>
+    <div class="col-md-5">
+        <h4>Shipping Information</h4>
+        <form asp-action="PlaceOrder" method="post">
+            @Html.AntiForgeryToken()
+            <div class="mb-3">
+                <label for="shippingAddress" class="form-label">Shipping Address</label>
+                <textarea name="shippingAddress" id="shippingAddress" class="form-control" rows="3">@ViewBag.ShippingAddress</textarea>
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg">Place Order</button>
+            </div>
+        </form>
+    </div>
+</div>

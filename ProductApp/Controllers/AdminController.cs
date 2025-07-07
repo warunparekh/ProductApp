@@ -2,8 +2,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using ProductApp.Models;
+using ProductApp.Models.ViewModels;
 using ProductApp.Repositories;
 using ProductApp.ViewModels;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ProductApp.Controllers
 {
@@ -14,17 +18,23 @@ namespace ProductApp.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly ProductRepository _productRepo;
         private readonly CategoryRepository _categoryRepo;
+        private readonly CartRepository _cartRepo;
+        private readonly OrderRepository _orderRepo;
 
         public AdminController(
             UserManager<ApplicationUser> um,
             IWebHostEnvironment env,
             ProductRepository productRepo,
-            CategoryRepository categoryRepo)
+            CategoryRepository categoryRepo,
+            CartRepository cartRepo,
+            OrderRepository orderRepo)
         {
             _um = um;
             _env = env;
             _productRepo = productRepo;
             _categoryRepo = categoryRepo;
+            _cartRepo = cartRepo;
+            _orderRepo = orderRepo;
         }
 
         // Dashboard
@@ -252,6 +262,137 @@ namespace ProductApp.Controllers
             await _productRepo.DeleteAsync(id);
             TempData["Success"] = "Product deleted successfully.";
             return RedirectToAction(nameof(Products));
+        }
+
+        // --- Cart Management ---
+        [HttpGet]
+        public async Task<IActionResult> ActiveCarts()
+        {
+            var allCarts = await _cartRepo.GetAllAsync();
+            var allUsers = _um.Users.ToList();
+
+            var activeCarts = allCarts
+                .GroupBy(c => c.UserId)
+                .Select(g => {
+                    var user = allUsers.FirstOrDefault(u => u.Id == g.Key);
+                    return new ActiveCartViewModel
+                    {
+                        UserId = g.Key,
+                        UserEmail = user?.Email ?? "Unknown User",
+                        ItemCount = g.Sum(c => c.ProductQuantity),
+                        TotalPrice = g.Sum(c => c.CartTotalPrice)
+                    };
+                })
+                .Where(vm => vm.ItemCount > 0)
+                .ToList();
+
+            return View(activeCarts);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ViewUserCart(string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+            {
+                return BadRequest();
+            }
+
+            var user = await _um.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            var cartItems = (await _cartRepo.GetByUserIdAsync(userId)).ToList();
+            var productIds = cartItems.Select(c => c.ProductId).ToList();
+            var products = (await _productRepo.GetByIdsAsync(productIds)).ToList();
+
+            var viewModel = cartItems.Select(c => new CartItemViewModel
+            {
+                Cart = c,
+                Product = products.FirstOrDefault(p => p.ProductId == c.ProductId)
+            }).ToList();
+
+            ViewBag.UserEmail = user.Email;
+            return View(viewModel);
+        }
+
+        // --- Order Management ---
+        [HttpGet]
+        public async Task<IActionResult> Orders()
+        {
+            var orders = await _orderRepo.GetAllOrdersAsync();
+            var userIds = orders.Select(o => o.UserId).Distinct();
+            var users = _um.Users.Where(u => userIds.Contains(u.Id)).ToList();
+
+            ViewBag.Users = users.ToDictionary(u => u.Id, u => u.Email);
+            return View(orders.OrderByDescending(o => o.OrderDate));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> OrderDetails(int id)
+        {
+            var order = await _orderRepo.GetOrderByIdAsync(id);
+            if (order == null) return NotFound();
+
+            var user = await _um.FindByIdAsync(order.UserId);
+            var details = await _orderRepo.GetDetailsByOrderIdAsync(id);
+            var productIds = details.Select(d => d.ProductId);
+            var products = await _productRepo.GetByIdsAsync(productIds);
+
+            var viewModel = new OrderViewModel
+            {
+                Order = order,
+                User = user,
+                OrderDetails = details.Select(d => new OrderDetailViewModel
+                {
+                    Detail = d,
+                    Product = products.FirstOrDefault(p => p.ProductId == d.ProductId)
+                }).ToList()
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateOrderStatus(int orderId, DispatchStatus status)
+        {
+            var order = await _orderRepo.GetOrderByIdAsync(orderId);
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            // **PREVENTION LOGIC**: If order is already cancelled, do not allow changes.
+            if (order.Status == DispatchStatus.Cancelled)
+            {
+                TempData["Error"] = "This order has been cancelled and its status cannot be changed.";
+                return RedirectToAction("OrderDetails", new { id = orderId });
+            }
+
+            // If the order is being newly cancelled, restock the items.
+            if (status == DispatchStatus.Cancelled)
+            {
+                var orderDetails = await _orderRepo.GetDetailsByOrderIdAsync(orderId);
+                var productsToUpdate = await _productRepo.GetByIdsAsync(orderDetails.Select(d => d.ProductId));
+
+                foreach (var detail in orderDetails)
+                {
+                    var product = productsToUpdate.FirstOrDefault(p => p.ProductId == detail.ProductId);
+                    if (product != null)
+                    {
+                        product.ProductStock += detail.Quantity;
+                        await _productRepo.UpdateAsync(product);
+                    }
+                }
+            }
+
+            order.Status = status;
+            await _orderRepo.UpdateOrderAsync(order);
+
+            TempData["Success"] = "Order status updated successfully.";
+            return RedirectToAction("OrderDetails", new { id = orderId });
         }
     }
 }

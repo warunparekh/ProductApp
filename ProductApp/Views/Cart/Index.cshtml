@@ -1,0 +1,73 @@
+﻿@model List<ProductApp.Models.ViewModels.CartItemViewModel>
+
+@{
+    ViewData["Title"] = "Your Shopping Cart";
+    var grandTotal = Model.Sum(item => item.Cart.CartTotalPrice);
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info mt-4">Your cart is empty. <a asp-controller="Product" asp-action="Index" class="alert-link">Continue shopping</a>.</div>
+}
+else
+{
+    <form asp-action="UpdateCart" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 10%;">Image</th>
+                        <th style="width: 35%;">Name</th>
+                        <th style="width: 15%;">Quantity</th>
+                        <th style="width: 15%;">Unit Price</th>
+                        <th style="width: 15%;">Total</th>
+                        <th style="width: 10%;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (var i = 0; i < Model.Count; i++)
+                    {
+                        <tr>
+                            <td>
+                                <input type="hidden" name="items[@i].ProductId" value="@Model[i].Cart.ProductId" />
+                                @if (!string.IsNullOrEmpty(Model[i].Product?.ProductImage))
+                                {
+                                    <img src="@Model[i].Product.ProductImage" alt="@Model[i].Product.ProductName" class="img-fluid rounded" style="width:60px; height:60px; object-fit:cover;" />
+                                }
+                            </td>
+                            <td>@Model[i].Product?.ProductName</td>
+                            <td>
+                                <input type="number" name="items[@i].Quantity" value="@Model[i].Cart.ProductQuantity" class="form-control form-control-sm" style="width: 80px;" min="0" />
+                            </td>
+                            <td>@Model[i].Cart.ProductNetprice.ToString("C")</td>
+                            <td>@Model[i].Cart.CartTotalPrice.ToString("C")</td>
+                            <td class="text-end">
+                                <a asp-action="RemoveFromCart" asp-route-productId="@Model[i].Cart.ProductId" class="btn btn-sm btn-danger" title="Remove Item">&times;</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div>
+                        <button type="submit" class="btn btn-primary">Update Cart</button>
+                        <a asp-action="ClearCart" asp-controller="Cart" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to clear your cart?');">Clear Cart</a>
+                    </div>                    
+                </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-end mt-3">
+                <div class="text-end">
+                    <h4 class="mb-2">Grand Total: <span class="text-primary">@grandTotal.ToString("C")</span></h4>
+                    <a asp-controller="Order" asp-action="Checkout" class="btn btn-success">Proceed to Checkout</a>
+                </div>
+        </div>
+    </form>
+}

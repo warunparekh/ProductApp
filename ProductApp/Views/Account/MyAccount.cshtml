@@ -1,0 +1,56 @@
+﻿@model ProductApp.Models.ViewModels.UpdateProfileViewModel
+@using ProductApp.Models
+
+@{
+    ViewData["Title"] = "My Account";
+    var orders = ViewBag.Orders as IEnumerable<Order>;
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <h4>Update Profile</h4>
+        <form asp-action="UpdateProfile" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="UserAddress" class="form-label"></label>
+                <textarea asp-for="UserAddress" class="form-control" rows="4"></textarea>
+                <span asp-validation-for="UserAddress" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+    </div>
+    <div class="col-md-8">
+        <h4>My Order History</h4>
+        @if (orders != null && orders.Any())
+        {
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Date</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in orders)
+                    {
+                        <tr>
+                            <td>@order.OrderId</td>
+                            <td>@order.OrderDate.ToString("d")</td>
+                            <td>@order.TotalAmount.ToString("C")</td>
+                            <td><span class="badge bg-info text-dark">@order.Status</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>You have not placed any orders yet.</p>
+        }
+    </div>
+</div>

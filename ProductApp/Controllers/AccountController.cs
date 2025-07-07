@@ -1,51 +1,51 @@
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using ProductApp.Models;
+using ProductApp.Models.ViewModels;
+using ProductApp.Repositories;
 using ProductApp.ViewModels;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace ProductApp.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly UserManager<ApplicationUser> _um;
-        private readonly SignInManager<ApplicationUser> _sm;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly OrderRepository _orderRepo;
 
-        public AccountController(
-            UserManager<ApplicationUser> um,
-            SignInManager<ApplicationUser> sm)
+        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, OrderRepository orderRepo)
         {
-            _um = um;
-            _sm = sm;
+            _userManager = userManager;
+            _signInManager = signInManager;
+            _orderRepo = orderRepo;
         }
 
         [HttpGet]
         public IActionResult Register() => View();
 
-        [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterViewModel m)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            if (!ModelState.IsValid) return View(m);
+            if (!ModelState.IsValid) return View(model);
 
-            var user = new ApplicationUser
-            {
-                UserName = m.Email,
-                Email = m.Email,
-                PhoneNumber = m.PhoneNumber,
-                UserAddress = m.UserAddress,
-                IsAdmin = false
-            };
+            var user = new ApplicationUser { UserName = model.Email, Email = model.Email, UserAddress = model.UserAddress };
+            var result = await _userManager.CreateAsync(user, model.Password);
 
-            var r = await _um.CreateAsync(user, m.Password);
-            if (r.Succeeded)
+            if (result.Succeeded)
             {
-                await _um.AddToRoleAsync(user, "User");
-                await _sm.SignInAsync(user, isPersistent: false);
-                return RedirectToAction("Index", "Home");
+                await _signInManager.SignInAsync(user, isPersistent: false);
+                return RedirectToAction("Index", "Product");
             }
-            foreach (var e in r.Errors)
-                ModelState.AddModelError("", e.Description);
 
-            return View(m);
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+            return View(model);
         }
 
         [HttpGet]
@@ -55,28 +55,82 @@ namespace ProductApp.Controllers
             return View();
         }
 
-        [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel m, string returnUrl = null)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
-            if (!ModelState.IsValid) return View(m);
+            if (!ModelState.IsValid) return View(model);
 
-            var r = await _sm.PasswordSignInAsync(m.Email, m.Password, m.RememberMe, false);
-            if (r.Succeeded)
+            var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+
+            if (result.Succeeded)
             {
-                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                    return Redirect(returnUrl);
-
-                return RedirectToAction("Index", "Home");
+                return RedirectToLocal(returnUrl);
             }
-            ModelState.AddModelError("", "Invalid login.");
-            return View(m);
+
+            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+            return View(model);
         }
 
-        [HttpPost, ValidateAntiForgeryToken]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            await _sm.SignOutAsync();
-            return RedirectToAction("Login");
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Index", "Product");
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> MyAccount()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            var orders = await _orderRepo.GetOrdersByUserIdAsync(user.Id);
+            ViewBag.Orders = orders;
+
+            var model = new UpdateProfileViewModel { UserAddress = user.UserAddress };
+            return View(model);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(UpdateProfileViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                ViewBag.Orders = await _orderRepo.GetOrdersByUserIdAsync(userId);
+                return View("MyAccount", model);
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            user.UserAddress = model.UserAddress;
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                TempData["Success"] = "Your profile has been updated.";
+            }
+            else
+            {
+                TempData["Error"] = "Could not update profile.";
+            }
+
+            return RedirectToAction("MyAccount");
+        }
+
+        private IActionResult RedirectToLocal(string returnUrl)
+        {
+            if (Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+            return RedirectToAction("Index", "Product");
         }
     }
 }

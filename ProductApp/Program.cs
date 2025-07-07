@@ -16,6 +16,8 @@ builder.Services.AddScoped<IUserStore<ApplicationUser>, DapperUserStore>();
 builder.Services.AddScoped<IRoleStore<ApplicationRole>, DapperRoleStore>();
 builder.Services.AddScoped<ProductRepository>();
 builder.Services.AddScoped<CategoryRepository>();
+builder.Services.AddScoped<CartRepository>();
+builder.Services.AddScoped<OrderRepository>();
 
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(opts =>
 {
@@ -31,7 +33,7 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-//seeding database (creating defaults before loading website
+//seeding database (creating defaults before loading website )
 using (var scope = app.Services.CreateScope())
 {
     try
@@ -69,6 +71,6 @@ app.MapControllerRoute(
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Product}/{action=Index}/{id?}");
 
 app.Run();

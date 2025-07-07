@@ -1,0 +1,75 @@
+﻿@model ProductApp.Models.ViewModels.OrderViewModel
+
+@{
+    ViewData["Title"] = "Order Details #" + Model.Order.OrderId;
+    // Determine if the form should be disabled
+    bool isCancelled = Model.Order.Status == ProductApp.Models.DispatchStatus.Cancelled;
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Order Information</div>
+            <div class="card-body">
+                <p><strong>Order ID:</strong> @Model.Order.OrderId</p>
+                <p><strong>Order Date:</strong> @Model.Order.OrderDate.ToString("F")</p>
+                <p><strong>Total Amount:</strong> @Model.Order.TotalAmount.ToString("C")</p>
+                <p><strong>Current Status:</strong> <span class="fw-bold">@Model.Order.Status</span></p>
+                <hr />
+
+                <form asp-action="UpdateOrderStatus" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="orderId" value="@Model.Order.OrderId" />
+                    <div class="input-group">
+                        <select name="status" class="form-select" asp-for="Order.Status" asp-items="Html.GetEnumSelectList<ProductApp.Models.DispatchStatus>()" disabled="@isCancelled"></select>
+                        <button type="submit" onclick="return confirm('Are you sure you want to update the status?');" class="btn btn-primary" disabled="@isCancelled">Update Status</button>
+                    </div>
+                </form>
+
+                @if (isCancelled)
+                {
+                    <div class="alert alert-warning mt-3" role="alert">
+                        This order is cancelled and cannot be modified.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Customer Information</div>
+            <div class="card-body">
+                <p><strong>User:</strong> @Model.User?.Email</p>
+                <p><strong>Shipping Address:</strong></p>
+                <p>@Model.Order.ShippingAddress</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3 class="mt-5">Items in this Order</h3>
+<table class="table table-bordered mt-3">
+    <thead class="table-light">
+        <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Unit Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.OrderDetails)
+        {
+            <tr>
+                <td>@item.Product?.ProductName</td>
+                <td>@item.Detail.Quantity</td>
+                <td>@item.Detail.UnitPrice.ToString("C")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="mt-4">
+    <a asp-action="Orders" class="btn btn-secondary">Back to All Orders</a>
+</div>
