@@ -81,7 +81,7 @@ namespace ProductApp.Controllers
             if (existingItem != null)
             {
                 existingItem.ProductQuantity += quantity;
-                existingItem.ProductNetprice = product.ProductPrice; // Always use latest price
+                existingItem.ProductNetprice = product.ProductPrice; 
                 existingItem.CartTotalPrice = existingItem.ProductQuantity * existingItem.ProductNetprice;
                 await _cartRepo.UpdateAsync(existingItem);
             }

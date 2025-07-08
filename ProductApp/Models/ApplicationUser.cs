@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System.ComponentModel.DataAnnotations.Schema;
-using Dapper.Contrib.Extensions;
+﻿using Dapper.Contrib.Extensions;
+using Microsoft.AspNetCore.Identity;
+
 
 namespace ProductApp.Models
 {
-    [Dapper.Contrib.Extensions.Table("AspNetUsers")]
+    [Table("AspNetUsers")]
     public class ApplicationUser : IdentityUser
     {
         public string UserAddress { get; set; }
