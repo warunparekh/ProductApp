@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "Order Details #" + Model.Order.OrderId;
-    // Determine if the form should be disabled
+    
     bool isCancelled = Model.Order.Status == ProductApp.Models.DispatchStatus.Cancelled;
 }
 

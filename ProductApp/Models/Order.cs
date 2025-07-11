@@ -13,7 +13,7 @@ namespace ProductApp.Models
         public DateTime OrderDate { get; set; }
         public decimal TotalAmount { get; set; }
         public string ShippingAddress { get; set; }
-        public DispatchStatus Status { get; set; } // Add this line
+        public DispatchStatus Status { get; set; } 
 
         [Write(false)]
         public List<OrderDetails> OrderDetails { get; set; } = new List<OrderDetails>();
